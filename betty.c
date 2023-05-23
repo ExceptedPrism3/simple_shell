@@ -1,33 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
 #define BUFFER_SIZE 1024
 #define PROMPT "#cisfun$ "
 
-/**
- * main - Entry point
- *
- * Return: Always 0
- */
 int main(void)
 {
-	char *buffer;
-	size_t bufsize = BUFFER_SIZE;
-
-	buffer = malloc(bufsize * sizeof(char));
-	if (buffer == NULL)
-	{
-		perror("Unable to allocate buffer");
-		exit(1);
-	}
+	char buffer[BUFFER_SIZE];
 
 	while (1)
 	{
 		printf(PROMPT);
-		if (getline(&buffer, &bufsize, stdin) == -1)
+		if (fgets(buffer, BUFFER_SIZE, stdin) == NULL)
 		{
 			printf("\n");
 			break;
@@ -36,7 +22,6 @@ int main(void)
 		/* Remove newline character */
 		buffer[strcspn(buffer, "\n")] = '\0';
 
-		/* Fork a child process to execute the command */
 		pid_t pid = fork();
 		if (pid < 0)
 		{
@@ -45,7 +30,6 @@ int main(void)
 		}
 		else if (pid == 0)
 		{
-			/* Child process */
 			if (execlp(buffer, buffer, NULL) == -1)
 			{
 				printf("%s: No such file or directory\n", buffer);
@@ -54,12 +38,10 @@ int main(void)
 		}
 		else
 		{
-			/* Parent process */
 			wait(NULL);
 		}
 	}
 
-	free(buffer);
 	return 0;
 }
 
