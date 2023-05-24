@@ -1,5 +1,3 @@
-#include "holberton.h"
-
 /**
  * main - entry point for application
  * @ac: argument count
