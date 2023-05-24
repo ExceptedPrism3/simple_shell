@@ -2,48 +2,46 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/wait.h>
 
 #define BUFFER_SIZE 1024
-#define PROMPT "#cisfun$ "
 
-int main(void) {
-    char *buffer;
-    size_t bufsize = BUFFER_SIZE;
-    buffer = (char *)malloc(bufsize * sizeof(char));
-    if (buffer == NULL) {
-        perror("Unable to allocate buffer");
-        exit(1);
-    }
+int main() {
+    char buffer[BUFFER_SIZE];
+    char *args[2];
+    int status;
 
     while (1) {
-        printf(PROMPT);
-        if (getline(&buffer, &bufsize, stdin) == -1) {
+        printf("#cisfun$ ");
+
+        if (fgets(buffer, BUFFER_SIZE, stdin) == NULL) {
             printf("\n");
             break;
         }
 
-        // Remove newline character
-        buffer[strcspn(buffer, "\n")] = 0;
+        buffer[strcspn(buffer, "\n")] = '\0';  // Remove trailing newline
 
-        // Fork a child process to execute the command
+        if (strcmp(buffer, "exit") == 0) {
+            break;
+        }
+
+        args[0] = buffer;
+        args[1] = NULL;
+
         pid_t pid = fork();
-        if (pid < 0) {
-            perror("Unable to fork");
-            exit(1);
+
+        if (pid == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
         } else if (pid == 0) {
             // Child process
-            if (execlp(buffer, buffer, NULL) == -1) {
-                printf("%s: No such file or directory\n", buffer);
-                exit(1);
-            }
+            execve(args[0], args, NULL);
+            perror("execve");
+            exit(EXIT_FAILURE);
         } else {
             // Parent process
-            wait(NULL);
+            waitpid(pid, &status, 0);
         }
     }
 
-    free(buffer);
-    return 0;
+    return EXIT_SUCCESS;
 }
-
