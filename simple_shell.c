@@ -1,47 +1,96 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include "simishell.h"
 
-#define BUFFER_SIZE 1024
+/**
+ * copyarray - a function to copy string array to another string array variable
+ * @line: a string array to be copied
+ * 
+ * Return: returns the copied array
+ */
 
-int main() {
-    char buffer[BUFFER_SIZE];
-    char *args[2];
-    int status;
+char **copyarray(char **line)
+{
+char **array;
+int i = 1;
 
-    while (1) {
-        printf("#cisfun$ ");
+array = malloc(64);
+if (!array)
+return (NULL);
 
-        if (fgets(buffer, BUFFER_SIZE, stdin) == NULL) {
-            printf("\n");
-            break;
-        }
+while (line[i] != NULL)
+{
+array[(i - 1)] = malloc(32);
+if (!array[(i - 1)])
+return (NULL);
 
-        buffer[strcspn(buffer, "\n")] = '\0';  // Remove trailing newline
+strcopy(line[i], array[(i - 1)]);
+i++;
+}
 
-        if (strcmp(buffer, "exit") == 0) {
-            break;
-        }
+return (array);
+}
 
-        args[0] = buffer;
-        args[1] = NULL;
+/**
+ * sigintHandler - a function to handle the ctrl-c signal
+ * @sig_num: an integer signal indicator
+ *
+ * Return: void function
+ */
 
-        pid_t pid = fork();
+void sigintHandler(int sig_num __attribute__((unused)))
+{
+signal(SIGINT, sigintHandler);
+write(1, "\n", 2);
+printprompt(0);
+fflush(stdout);
+}
 
-        if (pid == -1) {
-            perror("fork");
-            exit(EXIT_FAILURE);
-        } else if (pid == 0) {
-            // Child process
-            execve(args[0], args, NULL);
-            perror("execve");
-            exit(EXIT_FAILURE);
-        } else {
-            // Parent process
-            waitpid(pid, &status, 0);
-        }
-    }
+/**
+ * main - a the main function of the shell
+ * @argc: the number of arguments given
+ * @argv: an array of given argument strings
+ *
+ * Return: returns an integer
+ */
 
-    return EXIT_SUCCESS;
+int main(int argc __attribute__((unused)), char **argv)
+{
+char *line;
+
+line = malloc(256);
+if (!line)
+{
+perror("Allocation");
+exit(1);
+}
+
+if (!isatty(STDIN_FILENO))
+{
+if (getstr(line) == (-1))
+{
+write(1, "\n", 2);
+exit(1);
+}
+if (shellprocessor(strbrk(line, ' '), argv) == -1)
+{
+perror("Error");
+}
+
+exit(0);
+}
+
+do {
+printprompt(0);
+if (getstr(line) == (-1))
+{
+write(1, "\n", 2);
+exit(0);
+}
+
+if ((shellprocessor(strbrk(line, ' '), argv)) == -1)
+{
+perror("Error");
+}
+} while (1);
+
+return (0);
 }
