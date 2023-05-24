@@ -1,183 +1,325 @@
-# Simple Shell
+# ALX Simple Shell Team Project
 
-### Introduction
-This repository is a [Holberton School](https://www.holbertonschool.com/) Project. The school project consisted in writing a shell like sh (Bourne Shell) by Stephen Bourne  , in **C**, using a limited number of standard library functions, So Instead we used ower own function that we rewrited over the past three month [Here](https://github.com/Theemiss/holbertonschool-low_level_programming/)
+> This is an ALX collaboration project on Shell. We were tasked to create a simple shell that mimics the Bash shell. Our shell shall be called **hsh**
 
-The goal in this project was to make us understand how a shell works. To single out some items: what is the *environment*, the difference between *functions* and *system calls*, how to create *processes* using `execve`...  
+## Project was completed using
 
-## Usage 
-In order to run this program, 
+- C language
+- Shell
+- Betty linter
 
-Clone This Repo
+## General Requirement for project
 
-`` git clone https://github.com/Theemiss/simple_shell ``
+- All files will be compiled on Ubuntu 20.04 LTS using gcc, using the options -Wall -Werror -Wextra -pedantic -std=gnu89
+- All files should end with a new line
+- A README.md file, at the root of the folder of the project is mandatory
+- Use the Betty style. It will be checked using betty-style.pl and betty-doc.pl
+- Shell should not have any memory leaks
+- No more than 5 functions per file
+- All header files should be include guarded
+- Write a README with the description of the project
 
-compile it with  
 
-`gcc 4.8.4 -Wall -Werror -Wextra -pedantic *.c -o hsh`.  
-You can then run it by invoking `./hsh` in that same directory.  
+## Description ##
 
-### How to use it
-In order to use this shell, in a terminal, first run the program:    
-`prompt$ ./hsh`  
-It wil then display a simple prompt and wait for commands.  
-`$ `   
-A command will be of the type `$ command`  
-This shell can handle two types of commands: builtins and normal program.
-##### List of built-ins
-Currently the list of built-ins I wrote is:  
-* cd [directory]  
-Switch to the specified directory (path).
-* env  
-Displays the environment variable
-* exit [exitstatus]  
-Exit from the program with exitstatus value. 0 by default.
-* getenv NAME  
-Return the value of the NAME variable if it is in the environment
-* help [command]  
-Displays the syntax for the command, or all commands.  
-* history  
-Displays the last typed user .
-* echo [$$] or [$?] or [$PATH]
-Return pid and exit statue and PATH.
-##### Command
-Basicly Every Program in `$PATH`
-It Support Single Word like `ls` 
+**hsh** is a simple UNIX command language interpreter that reads commands from either a file or standard input and executes them.
 
-It Handle Path `ls /tmp`
+### How **hsh** works
+* Prints a prompt and waits for a command from the user
+* Creates a child process in which the command is checked
+* Checks for built-ins, aliases in the PATH, and local executable programs
+* The child process is replaced by the command, which accepts arguments
+* When the command is done, the program returns to the parent process and prints the prompt
+* The program is ready to receive a new command
+* To exit: press Ctrl-D or enter "exit" (with or without a status)
+* Works also in non interactive mode
 
-it Handle Options Like `ls -l`
+### Compilation
 
-it Handle All Three Togther Like `ls -l /var `
+`gcc -Wall -Werror -Wextra -pedantic -std=gnu89 *.c -o hsh`
 
-it Handle Command Path Also Like `/bin/ls` And All The Option And Path Like `/bin/ls -l /var`
+### Invocation
 
-it Handle Comments **#** 
-## Examples Command
-**Example 1**
+Usage: **hsh** [filename]
+
+To invoke **hsh**, compile all `.c` files in the repository and run the resulting executable.
+
+**hsh** can be invoked both interactively and non-interactively. If **hsh** is invoked with standard input not connected to a terminal, it reads and executes received commands in order.
+
+Example:
 ```
-Username@your-regular-prompt:~$ ./hsh
+$ echo "echo 'hello'" | ./hsh
+'hello'
+$
+```
+
+If **hsh** is invoked with standard input connected to a terminal (determined by [isatty](https://linux.die.net/man/3/isatty)(3)), an *interactive* shell is opened. When executing interactively, **hsh** displays the prompt `$ ` when it is ready to read a command.
+
+Example:
+```
+$./hsh
+$
+```
+
+Alternatively, if command line arguments are supplied upon invocation, **hsh** treats the first argument as a file from which to read commands. The supplied file should contain one command per line. **hsh** runs each of the commands contained in the file in order before exiting.
+
+Example:
+```
+$ cat test
+echo 'hello'
+$ ./hsh test
+'hello'
+$
+```
+
+### Environment
+
+Upon invocation, **hsh** receives and copies the environment of the parent process in which it was executed. This environment is an array of *name-value* strings describing variables in the format *NAME=VALUE*. A few key environmental variables are:
+
+#### HOME
+The home directory of the current user and the default directory argument for the **cd** builtin command.
+
+```
+$ echo "echo $HOME" | ./hsh
+/home/projects
+```
+
+#### PWD
+The current working directory as set by the **cd** command.
+
+```
+$ echo "echo $PWD" | ./hsh
+/home/projects/alx/simple_shell
+```
+
+#### OLDPWD
+The previous working directory as set by the **cd** command.
+
+```
+$ echo "echo $OLDPWD" | ./hsh
+/home/projects/alx/printf
+```
+
+#### PATH
+A colon-separated list of directories in which the shell looks for commands. A null directory name in the path (represented by any of two adjacent colons, an initial colon, or a trailing colon) indicates the current directory.
+
+```
+$ echo "echo $PATH" | ./hsh
+/home/projects/.cargo/bin:/home/projects/.local/bin:/home/projects/.rbenv/plugins/ruby-build/bin:/home/projects/.rbenv/shims:/home/projects/.rbenv/bin:/home/projects/.nvm/versions/node/v10.15.3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/projects/.cargo/bin:/home/projects/workflow:/home/projects/.local/bin
+```
+
+### Command Execution
+
+After receiving a command, **hsh** tokenizes it into words using `" "` as a delimiter. The first word is considered the command and all remaining words are considered arguments to that command. **hsh** then proceeds with the following actions:
+1. If the first character of the command is neither a slash (`\`) nor dot (`.`), the shell searches for it in the list of shell builtins. If there exists a builtin by that name, the builtin is invoked.
+2. If the first character of the command is none of a slash (`\`), dot (`.`), nor builtin, **hsh** searches each element of the **PATH** environmental variable for a directory containing an executable file by that name.
+3. If the first character of the command is a slash (`\`) or dot (`.`) or either of the above searches was successful, the shell executes the named program with any remaining given arguments in a separate execution environment.
+
+### Exit Status
+
+**hsh** returns the exit status of the last command executed, with zero indicating success and non-zero indicating failure.
+
+If a command is not found, the return status is `127`; if a command is found but is not executable, the return status is 126.
+
+All builtins return zero on success and one or two on incorrect usage (indicated by a corresponding error message).
+
+### Signals 
+
+While running in interactive mode, **hsh** ignores the keyboard input `Ctrl+c`. Alternatively, an input of end-of-file (`Ctrl+d`) will exit the program.
+
+User hits `Ctrl+d` in the third line.
+```
+$ ./hsh
+$ ^C
+$ ^C
+$
+```
+
+### Variable Replacement
+
+**hsh** interprets the `$` character for variable replacement.
+
+#### $ENV_VARIABLE
+`ENV_VARIABLE` is substituted with its value.
+
+Example:
+```
+$ echo "echo $PWD" | ./hsh
+/home/projects/alx/simple_shell
+```
+
+#### $?
+`?` is substitued with the return value of the last program executed.
+
+Example:
+```
+$ echo "echo $?" | ./hsh
+0
+```
+
+#### $$
+The second `$` is substitued with the current process ID.
+
+Example:
+```
+$ echo "echo $$" | ./hsh
+6494
+```
+
+### Comments 
+
+**hsh** ignores all words and characters preceeded by a `#` character on a line.
+
+Example:
+```
+$ echo "echo 'hello' #this will be ignored!" | ./hsh
+'hello'
+```
+
+### Operators
+
+**hsh** specially interprets the following operator characters:
+
+#### ; - Command separator
+Commands separated by a `;` are executed sequentially.
+
+Example:
+```
+$ echo "echo 'hello' ; echo 'world'" | ./hsh
+'hello'
+'world'
+```
+
+#### && - AND logical operator
+`command1 && command2`: `command2` is executed if, and only if, `command1` returns an exit status of zero.
+
+Example:
+```
+$ echo "error! && echo 'hello'" | ./hsh
+./hsh: 1: error!: not found
+$ echo "echo 'all good' && echo 'hello'" | ./hsh
+'all good'
+'hello'
+```
+
+#### || - OR logical operator
+`command1 || command2`: `command2` is executed if, and only if, `command1` returns a non-zero exit status.
+
+Example:
+```
+$ echo "error! || echo 'but still runs'" | ./hsh
+./hsh: 1: error!: not found
+'but still runs'
+```
+
+The operators `&&` and `||` have equal precedence, followed by `;`.
+
+### hsh Builtin Commands
+
+#### cd
+  * Usage: `cd [DIRECTORY]`
+  * Changes the current directory of the process to `DIRECTORY`.
+  * If no argument is given, the command is interpreted as `cd $HOME`.
+  * If the argument `-` is given, the command is interpreted as `cd $OLDPWD` and the pathname of the new working directory is printed to standad output.
+  * If the argument, `--` is given, the command is interpreted as `cd $OLDPWD` but the pathname of the new working directory is not printed.
+  * The environment variables `PWD` and `OLDPWD` are updated after a change of directory.
+
+Example:
+```
+$ ./hsh
 $ pwd
-/home/username/
-$ ^D
-Username@your-regular-prompt:~$
+/home/projects/alx/simple_shell
+$ cd ../
+$ pwd
+/home/projects/alx
+$ cd -
+$ pwd
+/home/projects/alx/simple_shell
 ```
-**Example 2**
-```
-Username@your-regular-prompt:~$ ./hsh
-$ ls -l /tmp 
--rw------- 1 username username    0 Dec  5 12:09 config-err-aAMZrR
-drwx------ 3 root   root   4096 Dec  5 12:09 systemd-private-062a0eca7f2a44349733e78cb4abdff4-colord.service-V7DUzr
-drwx------ 3 root   root   4096 Dec  5 12:09 systemd-private-062a0eca7f2a44349733e78cb4abdff4-rtkit-daemon.service-ANGvoV
-drwx------ 3 root   root   4096 Dec  5 12:07 systemd-private-062a0eca7f2a44349733e78cb4abdff4-systemd-timesyncd.service-CdXUtH
--rw-rw-r-- 1 username username    0 Dec  5 12:09 unity_support_test.0
-$ ^D
-Username@your-regular-prompt:~$
-```
-### Exmples Builtin
 
-**case env and exit**
+#### alias
+  * Usage: `alias [NAME[='VALUE'] ...]`
+  * Handles aliases.
+  * `alias`: Prints a list of all aliases, one per line, in the form `NAME='VALUE'`.
+  * `alias NAME [NAME2 ...]`: Prints the aliases `NAME`, `NAME2`, etc. one per line, in the form `NAME='VALUE'`.
+  * `alias NAME='VALUE' [...]`: Defines an alias for each `NAME` whose `VALUE` is given. If `name` is already an alias, its value is replaced with `VALUE`.
+
+Example:
 ```
-Username@your-regular-prompt:~$ ./hsh
-USER=julien
-LANGUAGE=en_US
-SESSION=ubuntu
-COMPIZ_CONFIG_PROFILE=ubuntu
-SHLVL=1
-HOME=/home/julien
-C_IS=Fun_:)
-DESKTOP_SESSION=ubuntu
-LOGNAME=julien
-TERM=xterm-256color
-PATH=/home/julien/bin:/home/julien/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
-DISPLAY=:0
+$ ./hsh
+$ alias show=ls
+$ show
+AUTHORS            builtins_help_2.c  errors.c         linkedlist.c        shell.h       test
+README.md          env_builtins.c     getline.c        locate.c            hsh
+alias_builtins.c   environ.c          helper.c         main.c              split.c
+builtin.c          err_msgs1.c        helpers_2.c      man_1_simple_shell  str_funcs1.c
+builtins_help_1.c  err_msgs2.c        input_helpers.c  proc_file_comm.c    str_funcs2.c
+```
+
+#### exit
+  * Usage: `exit [STATUS]`
+  * Exits the shell.
+  * The `STATUS` argument is the integer used to exit the shell.
+  * If no argument is given, the command is interpreted as `exit 0`.
+
+Example:
+```
+$ ./hsh
 $ exit
-Username@your-regular-prompt:~$ 
-
 ```
-**Case Exit Statue**
+
+#### env
+  * Usage: `env`
+  * Prints the current environment.
+
+Example:
 ```
-Username@your-regular-prompt:~$ ./hsh
-$ exit 98
-Username@your-regular-prompt:~$ echo $?
-98
-Username@your-regular-prompt:~$
-
+$ ./hsh
+$ env
+NVM_DIR=/home/projects/.nvm
+...
 ```
-Keep Exploring The echo Builtin and history ... Using The Help Builtin
 
-### Also
-* Handle Ctrl+C: your shell should not quit when the user inputs ^C
-* If no argument is given to cd the command must be interpreted like cd $HOME
-* handle the command cd -
-* Handle variables replacement
-* Handle the $? variable
-* Handle the $$ variable
-* Handle The Argument file like `./hsh test` Where test is a file filled with command and builtin to excute.
-### List of functions and system calls we could use
-List of allowed functions and system calls
+#### setenv
+  * Usage: `setenv [VARIABLE] [VALUE]`
+  * Initializes a new environment variable, or modifies an existing one.
+  * Upon failure, prints a message to `stderr`.
 
-    access (man 2 access)
-    chdir (man 2 chdir)
-    close (man 2 close)
-    closedir (man 3 closedir)
-    execve (man 2 execve)
-    exit (man 3 exit)
-    fork (man 2 fork)
-    free (man 3 free)
-    fstat (man 2 fstat)
-    getcwd (man 3 getcwd)
-    getline (man 3 getline)
-    kill (man 2 kill)
-    lstat (man 2 lstat)
-    malloc (man 3 malloc)
-    open (man 2 open)
-    opendir (man 3 opendir)
-    perror (man 3 perror)
-    read (man 2 read)
-    readdir (man 3 readdir)
-    signal (man 2 signal)
-    stat (man 2 stat)
-    strtok (man 3 strtok)
-    wait (man 2 wait)
-    waitpid (man 2 waitpid)
-    wait3 (man 2 wait3)
-    wait4 (man 2 wait4)
-    write (man 2 write)
-    _exit (man 2 _exit)
-### Custom Function (Recreation of Standard Function in C)
- * _strncpy
- * _strlen
- * _putchar
- * _atoi
- * _puts
- * _strcmp
- * _isalpha
- * array_rev
- * intlen
- * _itoa
- * _strcat
- * _strcpy
- * _strchr
- * _strncmp
- * _strdup
- * _memcpy
- * _calloc
- * _realloc
- * _getenv
- * _getline
- * _strtok
-
-For More Info About It Check The Man Page by
+Example:
 ```
-Username@your-regular-prompt:~$ man ./man_1_simple_shell
+$ ./hsh
+$ setenv NAME Poppy
+$ echo $NAME
+Poppy
 ```
-Project Done in 15 Day
 
-Read More [Here](https://midinfotn401.medium.com/shell-step-by-step-what-happen-when-you-type-ls-l-in-the-shell-83d655712332)
-## Authors
-* Ahmed Belhaj [Theemiss](https://github.com/Theemiss)
+#### unsetenv
+  * Usage: `unsetenv [VARIABLE]`
+  * Removes an environmental variable.
+  * Upon failure, prints a message to `stderr`.
 
-<p align="center">
-  <img src="http://www.holbertonschool.com/holberton-logo.png" alt="Holberton School logo">
-</p>
+Example:
+```
+$ ./hsh
+$ setenv NAME Poppy
+$ unsetenv NAME
+$ echo $NAME
+
+$
+```
+
+
+### What we learned:
+* How a shell works and finds commands
+* Creating, forking and working with processes
+* Executing a program from another program
+* Handling dynamic memory allocation in a large program
+* Pair programming and team work
+* Building a test suite to check our own code
+
+
+## Authors ##
+
+👤 **John Mwega**
+👤 **Dennis Kerich**
+
