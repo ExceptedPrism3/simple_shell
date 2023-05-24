@@ -1,40 +1,38 @@
-#include "holberton.h"
 /**
- * _memset - fills memory with a constant byte.
- * @s: address begin to fill
- * @b: value to set on memory
- * @n: numbers of bytes to pointed by s
- * Return: char
+ * main - entry point for application
+ * @ac: argument count
+ * @av: argument vector
+ * Return: 0 on success
  */
-char *_memset(char *s, char b, unsigned int n)
+int main(int ac, char **av)
 {
-	unsigned int cont = 0;
-
-	while (cont < n)
-	{
-		*(s + cont) = b;
-		cont++;
-	}
-	return (s);
+	config build;
+	(void)ac;
+	signal(SIGINT, handle_sigint);
+	config_init(&build);
+	build.shell_name = av[0];
+	shell(&build);
+	return (0);
 }
+
 /**
- * _calloc - function that allocates memory for an array, using malloc
- * @nmemb: amount to values to store on memory
- * @size: number of bytes of datatype
+ * config_init - initialize member values for config struct
+ * @build: input build
  *
- * Return: Void pointer
+ * Description: Accepts structured input commnad, and finds the right
+ * configuration to execute from the built-in configurations.
+ * Return: build with initialized members
  */
-void *_calloc(unsigned int nmemb, int size)
+config *config_init(config *build)
 {
-	void *p = NULL;
-
-	if (nmemb == 0 || size == 0)
-		return (NULL);
-	p = malloc(nmemb * size);
-
-	if (p == NULL)
-		return (NULL);
-
-	_memset(p, 0, size * nmemb);
-	return (p);
+	build->env = generateLinkedList(environ);
+	build->env_list = NULL;
+	build->args = NULL;
+	build->buffer = NULL;
+	build->path = _getenv("PATH", environ);
+	build->full_path = NULL;
+	build->count_line = 0;
+	build->shell_name = NULL;
+	build->error_status = 0;
+	return (build);
 }
