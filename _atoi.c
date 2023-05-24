@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <signal.h>
 
 typedef struct config {
@@ -14,15 +11,9 @@ void shell(config *build);
 char *_getenv(const char *name, char **env);
 void generateLinkedList(char **env);
 
-/**
- * main - Entry point for the application
- * @ac: Argument count
- * @av: Argument vector
- * Return: 0 on success
- */
 int main(int ac, char **av)
 {
-    config build;
+    config build = {0};
     signal(SIGINT, handle_sigint);
     config_init(&build);
     build.shell_name = av[0];
@@ -30,21 +21,9 @@ int main(int ac, char **av)
     return 0;
 }
 
-/**
- * config_init - Initialize member values for config struct
- * @build: Input build
- * Return: Build with initialized members
- */
 config *config_init(config *build)
 {
     build->env = generateLinkedList(environ);
-    build->env_list = NULL;
-    build->args = NULL;
-    build->buffer = NULL;
-    build->path = _getenv("PATH", environ);
-    build->full_path = NULL;
-    build->count_line = 0;
-    build->shell_name = NULL;
-    build->error_status = 0;
+    // Initialize other members
     return build;
 }
