@@ -1,72 +1,47 @@
-ALX - Simple Unix Like Shell
-===========================
-     C programming with ALX School!
-================================================================================
+# Simple Shell.
 
-## Description:
-    
-The implementation of a simple shell. The shell is an interactive interface that allows users to execute other commands and utilities in Linux and other UNIX-based operating systems. Shells use either a command-line interface or graphical user interface, depending on a computer's role and particular operation.
+This project is an implementation of the C programming language to build a Simple Shell as part of the curriculum of ALX software engineering program(Holberton School).
 
-## Installation:
+## Prerequisites.
 
-- clone the repository
+Below is the list of allowed and used functions and system calls.
 
-     https://github.com/sertsev/simple_shell
+* access (man 2 access)
+* chdir (man 2 chdir)
+* close (man 2 close)
+* closedir (man 3 closedir)
+* execve (man 2 execve)
+* exit (man 3 exit)
+* _exit (man 2 _exit)
+* fflush (man 3 fflush)
+* fork (man 2 fork)
+* free (man 3 free)
+* getcwd (man 3 getcwd)
+* getline (man 3 getline)
+* getpid (man 2 getpid)
+* isatty (man 3 isatty)
+* kill (man 2 kill)
+* malloc (man 3 malloc)
+* open (man 2 open)
+* opendir (man 3 opendir)
+* perror (man 3 perror)
+* read (man 2 read)
+* readdir (man 3 readdir)
+* signal (man 2 signal)
+* stat (__xstat) (man 2 stat)
+* lstat (__lxstat) (man 2 lstat)
+* fstat (__fxstat) (man 2 fstat)
+* strtok (man 3 strtok)
+* wait (man 2 wait)
+* waitpid (man 2 waitpid)
+* wait3 (man 2 wait3)
+* wait4 (man 2 wait4)
+* write (man 2 write)
 
-- compile with
+The shell is compiled this way.  
+`gcc -Wall -Werror -Wextra -pedantic -std=gnu89 *.c -o hsh`
 
-     gcc -Wall -Werror -Wextra -pedantic *.c -o tsh
+## Testing.
 
-
-## Example:
-
-     ubuntu@ubuntu$ ./hsh     
-     $ pwd
-     /home/ubuntu/simple_shell
-     $ /bin/pwd
-     /home/ubuntu/simple_shell
-     $ ls -la
-     -rw-rw-r-- 1 vagrant vagrant  bytes <date> builtins.c
-     -rw-rw-r-- 1 vagrant vagrant   bytes <date> shell.h
-
-## Builtins commands:
-
-     exit: exits a shell
-     
-     env: show/displays environment variables
-     
-## Special Features:
-
-     Ctrl + C: To prevent the killing of the simple-shell
-     
-     Ctrl + D: exit the simple-shell
-
-## Files:
-
-     simishell.h: This file contains all the prototypes used for our shell project.
-
-     AUTHORS: This file contains all the contributors to this repository.
-
-     README.md: This file contains this readme text.
-
-     man_1_simple_shell: The man page for our shell.
-     
-     simpleshell.c: This file contain main function of the shell to excute and launch the shell.
-     
-     unnecessary.c: This file contains all the customization functions.
-     
-     shellprocessor.c: This file contains the shell processing and function selector functions.
-
-     builtin.c: This file contains the code for the builtin functions of code.
-
-     utility.c: This file contains helper functions.
-     
-    
-## WARNING:
-
-The work is still in progress, and a lot of things like aliases and piping, redirection,... are not available.
-
-
-## Authors
-
-* [**Sertsedengle Shewandagn**](https://github.com/sertsev)
+> All the files in this repo are written and tested on Ubuntu 20.04 LTS using `gcc` with the flags `-Wall -Werror -pedantic -Wextra -std=gnu89`
+> The contributing authors are listed in the file [AUTHORS](/AUTHORS)
