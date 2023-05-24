@@ -1,34 +1,23 @@
 #include "holberton.h"
 
 /**
- * main - principal function
- * @argc: is an int
- * @argv: is a char
- * @environ: global variable
- * Return: 0
- */
+ * main - shell proyect
+ * @ac: count arguments
+ * @av: store arguments
+ * @env: variable envirionment system
+ * Return: estatus_exit value;
+ **/
 
-int main(int argc, char **argv, char **environ)
+int main(int ac, char *av[], char **env)
 {
-	char *line = NULL;
-	char *delim = "\t \a\n";
-	char *command;
-	char **tokens;
-	(void)argc;
+	int count_exe = 1, status_exit = 0;
+	(void)ac;
 
-	tokens = find_path(environ);
-
-	signal(SIGINT, SIG_IGN);
-	while (1)
+	if (ac > 1)
 	{
-		line = read_line();
-		argv = splits(line, delim);
-		command = args_path(argv, tokens);
-		if (command == NULL)
-			execute(argv);
-		free(line);
-		free(argv);
-		free(command);
+		non_interact(av);
+		return (0);
 	}
-	return (0);
+	status_exit = interactive(av, count_exe, env);
+	return (status_exit);
 }
