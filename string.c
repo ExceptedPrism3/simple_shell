@@ -1,75 +1,174 @@
-#include "shell.h"
+#include "simishell.h"
 
 /**
- * _strlen - returns the length of a string
- * @s: the string whose length to check
- *
- * Return: integer length of string
- */
-int _strlen(char *s)
+* getstr - a function to read a string from  the cli
+* @str: a string pointer
+*
+* Return: return 1 in success and -1 in failure
+*/
+
+int getstr(char *str)
 {
-	int i = 0;
+char **line;
+size_t siz = 0;
+signal(SIGINT, sigintHandler);
+line = malloc(24);
+if (!line)
+{
+return (-1);
+}
 
-	if (!s)
-		return (0);
+if ((getline(line, &siz, stdin)) == -1)
+{
+return (-1);
+}
 
-	while (*s++)
-		i++;
-	return (i);
+line[0][siz] = '\0';
+
+strcopy(line[0], str);
+
+if (line[0][siz - 2] == '\\')
+{
+do {
+str[strleng(str) - 1] = ' ';
+siz = 0;
+printprompt(1);
+
+if ((getline(line, &siz, stdin)) == -1)
+{
+return (-1);
+}
+line[0][siz] = '\0';
+
+strmix(line[0], str);
+} while (line[0][siz - 2] == '\\');
+}
+
+free(line);
+return (1);
 }
 
 /**
- * _strcmp - performs lexicogarphic comparison of two strangs.
- * @s1: the first strang
- * @s2: the second strang
- *
- * Return: negative if s1 < s2, positive if s1 > s2, zero if s1 == s2
- */
-int _strcmp(char *s1, char *s2)
+* strcopy - a function to copy to strings
+* @src: the string to be copied
+* @dest: the destination of the copied string
+*
+* Return: returns nothing (void)
+*/
+
+void strcopy(char *src, char *dest)
 {
-	while (*s1 && *s2)
-	{
-		if (*s1 != *s2)
-			return (*s1 - *s2);
-		s1++;
-		s2++;
-	}
-	if (*s1 == *s2)
-		return (0);
-	else
-		return (*s1 < *s2 ? -1 : 1);
+int i = 0;
+int j = 0;
+
+if (!dest)
+{
+j = 0;
+}
+
+while (src[i] != '\0' && src[i] != '\n')
+{
+dest[j++] = src[i++];
+}
+
+dest[j] = '\0';
 }
 
 /**
- * starts_with - checks if needle starts with haystack
- * @haystack: string to search
- * @needle: the substring to find
- *
- * Return: address of next char of haystack or NULL
- */
-char *starts_with(const char *haystack, const char *needle)
+* strmix - a function to copy to strings and concatenate if
+*	   the destination have a string already.
+* @src: the string to be copied
+* @dest: the destination of the copied string
+*
+* Return: returns nothing (void)
+*/
+
+void strmix(char *src, char *dest)
 {
-	while (*needle)
-		if (*needle++ != *haystack++)
-			return (NULL);
-	return ((char *)haystack);
+int i = 0;
+int j;
+
+if (!dest)
+{
+j = 0;
+}
+else
+{
+j = strleng(dest);
+}
+
+while (src[i] != '\0' && src[i] != '\n')
+{
+dest[j++] = src[i++];
+}
+
+dest[j] = '\0';
 }
 
 /**
- * _strcat - concatenates two strings
- * @dest: the destination buffer
- * @src: the source buffer
- *
- * Return: pointer to destination buffer
- */
-char *_strcat(char *dest, char *src)
-{
-	char *ret = dest;
+* strbrk - a function that breaks a long string in to arrauy of strings
+* @line: the string to be breakdown
+* @c: a chacter specifier where to break the string
+*
+* Return: returns the array of the words.
+*/
 
-	while (*dest)
-		dest++;
-	while (*src)
-		*dest++ = *src++;
-	*dest = *src;
-	return (ret);
+char **strbrk(char *line, char c)
+{
+int i = 0, j = 0;
+char **array, **tmp;
+
+if (!line || line[0] == '\0')
+{
+return (NULL);
+}
+array = malloc(sizeof(*array) * 128);
+if (array == NULL)
+{
+perror("Couldn't Allocate");
+return (NULL); }
+while (line[i] != '\0')
+{
+if (j > 124)
+{
+tmp = realloc(array, sizeof(*array) * (i + 4));
+if (tmp == NULL)
+{
+perror("Couldn't Reallocate");
+return (NULL); }
+else
+{
+array = tmp; }
+}
+if (line[i] == c)
+{
+i++;
+continue; }
+array[j] = stringer(line, i, array[j], c);
+if (array[j] == NULL)
+{
+return (NULL); }
+i += strleng(array[j++]);
+}
+array[j] = NULL;
+return (array);
+}
+
+/**
+* strleng - measures a length of a string
+* @s: a string location pointer
+*
+* Return: returns length
+*/
+
+int strleng(char *s)
+{
+int len = 0;
+
+while (s[len] != '\0')
+{
+len++;
+}
+
+return (len);
 }
