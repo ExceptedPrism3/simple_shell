@@ -14,6 +14,12 @@ void shell(config *build);
 char *_getenv(const char *name, char **env);
 void generateLinkedList(char **env);
 
+/**
+ * main - Entry point for the application
+ * @ac: Argument count
+ * @av: Argument vector
+ * Return: 0 on success
+ */
 int main(int ac, char **av)
 {
     config build;
@@ -24,6 +30,11 @@ int main(int ac, char **av)
     return 0;
 }
 
+/**
+ * config_init - Initialize member values for config struct
+ * @build: Input build
+ * Return: Build with initialized members
+ */
 config *config_init(config *build)
 {
     build->env = generateLinkedList(environ);
